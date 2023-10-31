@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff; /* White background */
+            display: flex;
+            justify-content: space-between; /* Arrange containers side by side */
+        }
+
+        .container {
+            width: 48%; /* Adjust width as needed */
+            background-color: #f9f9f9; /* Slightly off-white container */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333; /* Dark gray heading */
+        }
+
+        #logs {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f4f4f4; /* Light gray logs background */
+        }
+
+        .suspicious-log {
+            color: #ff6b6b; /* Light red color for suspicious logs */
+        }
+
+        .highlight-ip {
+            color: #ffcd38; /* Yellow color for highlighted IP addresses */
+        }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            border: 2px solid gray;
+            color: gray;
+            background-color: #fff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+
+        .file-name {
+            margin-left: 10px;
+            color: #333; /* Dark gray file name */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Real-Time Logs</h1>
+        <div id="logs"></div>
+    </div>
+
+    <div class="container">
+        <h1>Upload Logs</h1>
+        <div class="upload-btn-wrapper">
+            <button class="btn">Upload a file</button>
+            <input type="file" name="myfile" id="logFile" accept=".txt, .log" />
+        </div>
+        <p class="file-name"></p>
+    </div>
+
+    <!-- Add the Socket.IO library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+
+    <script>
+        const socket = io('http://localhost:3000'); // Connect to the server
+
+        let logCount = 0;
+
+        const unixOSNames = [
+            'Linux',
+            'Ubuntu',
+            'Debian',
+            'Fedora',
+            'CentOS',
+            'Red Hat',
+            'UNIX',
+        ];
+
+        const prompts = [
+            'Analyzing network traffic...',
+            'Checking system logs...',
+            'Scanning for vulnerabilities...',
+            'Verifying user permissions...'
+        ];
+
+        const activities = [
+            'Accessed sensitive files',
+            'Modified system configurations',
+            'Attempted unauthorized login',
+            'Established suspicious connection'
+        ];
+
+        function getRandomUnixOSName() {
+            const randomIndex = Math.floor(Math.random() * unixOSNames.length);
+            return unixOSNames[randomIndex];
+        }
+
+        function getRandomPrompt() {
+            const randomIndex = Math.floor(Math.random() * prompts.length);
+            return prompts[randomIndex];
+        }
+
+        function getRandomActivity() {
+            const randomIndex = Math.floor(Math.random() * activities.length);
+            return activities[randomIndex];
+        }
+
+        function getRandomIP() {
+            return Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
+        }
+
+        function updateLog(logText, isSuspicious = false) {
+            const logOutput = document.getElementById('logs');
+            const newLine = document.createElement('div');
+            if (isSuspicious) {
+                newLine.classList.add('suspicious-log');
+            }
+            const ipHighlightedText = logText.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '<span class="highlight-ip">$&</span>');
+            newLine.innerHTML = `
+                Level: Information
+                Date and Time: 31-10-2023 22:8:29
+                Source: System
+                Event ID: 4476
+                Task Category: None
+            `;
+            logOutput.appendChild(newLine);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        // Simulate real-time log updates with Unix-based OS names
+        setInterval(function() {
+            const suspiciousLog = 'Suspicious network activity detected!';
+            updateLog(suspiciousLog, Math.random() < 0.5);
+        }, 1000); // Update every 2 seconds (replace this interval with your actual log update interval)
+
+        const logFile = document.getElementById('logFile');
+        const fileNameDisplay = document.querySelector('.file-name');
+
+        logFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                fileNameDisplay.textContent = file.name;
+                // You can add logic here to
+                // You can add logic here to process the uploaded file
+            }
+        });
+
+        // Add an event listener for log updates
+        socket.on('logUpdate', (logText, isSuspicious) => {
+            updateLog(logText, isSuspicious);
+        });
+    </script>
+</body>
+
+</html>
